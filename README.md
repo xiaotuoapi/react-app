@@ -5,3 +5,4 @@
 # npm install taro-ui 同上命令
 # npm install @tarojs/taro-h5 解决 Module not found: Can’t resolve ‘@tarojs/taro-h5’ in ‘****/******’类似问题
 # npm install nervjs 解决 Module not found: Can’t resolve ‘nervjs’ 
+# npm install @tarojs/taro 解决Module not found: Can’t resolve ‘@tarojs/taro’
