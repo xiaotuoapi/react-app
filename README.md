@@ -3,6 +3,8 @@
 # npm run dev:h5
 # cnpm install taro-ui 加载taro-ui组件
 # npm install taro-ui 同上命令
-# npm install @tarojs/taro-h5 解决 Module not found: Can’t resolve ‘@tarojs/taro-h5’ in ‘****/******’类似问题
-# npm install nervjs 解决 Module not found: Can’t resolve ‘nervjs’ 
-# npm install @tarojs/taro 解决Module not found: Can’t resolve ‘@tarojs/taro’
+# npm install @tarojs/taro-h5 解决Module not found: Can’t resolve *****
+# npm install nervjs 解决Module not found: Can’t resolve *****
+# npm install @tarojs/taro 解决Module not found: Can’t resolve *****
+# 全局引入（JS中）： 在入口文件中引入 taro-ui 所有的样式 在app.js中引入
+import 'taro-ui/dist/style/index.scss' // 引入组件样式 - 方式一
