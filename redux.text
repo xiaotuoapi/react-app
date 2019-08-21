@@ -1,0 +1,135 @@
+REACT REDUX 兄弟组件之间调用方法
+一个场景，兄弟组件A和B，在组件B中的点击事件里面需要操作A组件的state，进行A组件里的tab标签增加和删除。因为用到redux，所以需要把这个state的数据抽出来做状态管理
+1 新建action.js文件
+    export const CHANGE_ADDTABS = 'CHANGE_ADDTABS'; // 增加标签
+	export const CHANGE_DELETETABS = 'CHANGE_DELETETABS'; // 删除标签
+	
+	//  增加tab标签
+	export const changeAddTabs = (tab) => ({
+	  type: CHANGE_ADDTABS,
+	  tab
+	});
+	
+	// 删除tab标签
+	export const changeDeleteTab = (tabkey) => ({
+	  type: CHANGE_DELETETABS,
+	  tabkey      //要删除标签的key值
+	});
+2.store.js文件
+    import { createStore, combineReducers } from 'redux';
+	import { composeWithDevTools } from 'redux-devtools-extension';
+	import { persistStore, persistReducer } from 'redux-persist';
+	import storage from 'redux-persist/lib/storage/session';
+	import changeTabstate from '../reducer/index';     //这里是相对路径，是从reducer.js中引入
+	
+	const persistConfig = {
+	  key: 'root',
+	  storage
+	};
+	
+	// reducer，后面还有别的状态管理也可以放进去
+	const reducer = combineReducers({
+	  changeTabstate ,
+	});
+	
+	// 直接照抄
+	const persistedReducer = persistReducer(persistConfig, reducer);
+	export default () => {
+	  let store = createStore(persistedReducer, composeWithDevTools());
+	  let persistor = persistStore(store);
+	  return { store, persistor };
+	};
+3.reducer.js文件
+    //从action.js中引入两个常量
+	import { CHANGE_ADDTABS, CHANGE_DELETETABS } from '../../actions/action';  
+	
+	//定义初始数据(A组件的state)，需求是初始页面中默认有3个tab
+	const initState = {
+	  activeTab: '0',     //表示当前处于active状态的tab
+	  addTabs: [
+	    { title: 'tab1', closable: false, key: '0' },
+	    { title: 'tab2', closable: false, key: '1' },
+	    { title: 'tab3', closable: false, key: '2' }
+	  ]
+	};
+	
+	// 增加tab（参数1：tab数据，参数2：新增的那条tab数据）
+	const changeAddTabs = (state, tab) => {
+	  let tabList = state.addTabs;
+	  tabList.push(tab);
+	  //返回新的state（这里注意要使用解构赋值，不然操作之后页面需要刷新才会更新）
+	  return {
+	    ...state,
+	    addTabs: [ ...tabList ]
+	  };
+	};
+	
+	// 删除标签（参数1：tab数据，参数2：要删除的tab的key值）
+	const changeDeleteTabs = (state, tabkey) => {
+	  let tabList = state.addTabs;
+	  //删除逻辑
+	  let newTabList = tabList.filter((pane) => pane.key !== tabkey);
+	  //最后还是要返回一个新的state
+	  return {
+	    ...state,
+	    addTabs: [ ...newTabList ]
+	  };
+	};
+	
+	//最后将增加和删除的操作return出去
+	export default (state = initState, action) => {
+	  switch (action.type) {  //type对应action中定义的type
+	    case CHANGE_ADDTABS:
+	      return changeAddTabs(state, action.tab);
+	    case CHANGE_DELETETABS:
+	      return changeDeleteTabs(state, action.tabkey);
+	    default:
+	      return state;
+	  }
+	};
+4.兄弟组件B
+    import React from 'react';
+	//这两个一定要引入
+	import { connect } from 'react-redux';      
+	import { changeAddTabs, changeActiveKey } from '../../../../redux/action/action';
+	
+	//这里用的react新的hook写法，和以前的class差不多
+	const BortherB= (props) => {
+		//B组件的点击事件，此时可以操作A组件的state
+		const clickAddTAbs = () => {
+			//在props中直接拿到方法调用，这个addTabs方法名就是最后面mapDispatchToProps中定义的名字
+			props.addTabs();    
+		}
+		return (
+			<div>.....</div>
+		);
+	}
+	// 从reducer中获取初始值，props.tabList就可以直接拿
+	const mapStateToProps = (state) => ({
+	  //changeTabstate和store.js中定义的changeTabstate对应
+	  tabList: state.changeTabstate.addTabs,   //addTabs和reducer.js中的初始数据字段addTabs对应  
+	  active: state.changeTabstate.activeTab//activeTab和reducer.js中的初始数据字段activeTab对应 
+	});
+	
+	// 将增加和删除的方法注入到props中，页面中就可以直接调用
+	const mapDispatchToProps = {
+	  addTabs: changeAddTabs,
+	  deleteTabs: changeDeleteTabs
+	};
+	
+	//最后connect一下
+	export default connect(mapStateToProps, mapDispatchToProps)(BortherB);
+5.兄弟组件A
+   组件A和组件B的写法一样，下面这些都需要，头部的依赖也要引入，初始数据和方法按需加进来就好
+   const mapStateToProps =(state)=>({
+   	 //changeTabstate和store.js中定义的changeTabstate对应
+   	 tabList:state.changeTabstate.addTabs, // addTabs和reducer.js中的初始数据字段addTabs对应
+	 active: state.changeTabstate.activeTab //activeTab和reducer.js中的初始数据字段activeTab对应   	 
+   })
+   //将增加和删除的方法注入到props中,页面中就可以直接调用
+   const mapDispatchToProps ={
+   	addTabs: changeAddTabs,
+   	deleteTabs:changeDeleteTabs
+   };
+   //最后connect
+export default connect(mapStateToProps,mapDispatchToProps)(TodoList)
